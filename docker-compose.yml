@@ -8,7 +8,10 @@ services:
     env_file:
       - .env
     ports:
-      - "127.0.0.1:3000:3000"
+      # Host port mapped to 3030 to avoid a stale Docker Desktop port-3000 allocation.
+      # Container still listens on 3000 internally (PORT env). Revert to 127.0.0.1:3000:3000
+      # after restarting Docker Desktop if you want the default host port.
+      - "127.0.0.1:3030:3000"
     healthcheck:
       test: ["CMD", "node", "-e", "const http=require('http');const req=http.get('http://127.0.0.1:3000/health',res=>process.exit(res.statusCode===200?0:1));req.on('error',()=>process.exit(1));req.setTimeout(5000,()=>{req.destroy();process.exit(1);});"]
       interval: 30s

@@ -4,6 +4,7 @@
 
 const { execFile } = require('node:child_process');
 const { DEFAULTS } = require('../../config/constants');
+const { APP_ROOT } = require('../../config/paths');
 
 const DEBUG_COMMAND_LOGS = process.env.DEBUG_COMMAND_LOGS === 'true';
 const MAX_LOG_OUTPUT = DEFAULTS.MAX_LOG_OUTPUT;
@@ -30,7 +31,7 @@ function truncateLogOutput(text) {
  */
 function runCommand(executable, args = []) {
     return new Promise((resolve, reject) => {
-        execFile(executable, args, { maxBuffer: 1024 * 10000, timeout: COMMAND_TIMEOUT_MS }, (error, stdout, stderr) => {
+        execFile(executable, args, { cwd: APP_ROOT, maxBuffer: 1024 * 10000, timeout: COMMAND_TIMEOUT_MS }, (error, stdout, stderr) => {
             if (DEBUG_COMMAND_LOGS && stdout) console.log(`[CMD LOG]:\n${truncateLogOutput(stdout)}`);
             if (DEBUG_COMMAND_LOGS && stderr) console.error(`[CMD ERR]:\n${truncateLogOutput(stderr)}`);
 

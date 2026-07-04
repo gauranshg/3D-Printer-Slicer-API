@@ -51,10 +51,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /tmp
 
 ARG PRUSA_APPIMAGE_URL="https://github.com/prusa3d/PrusaSlicer/releases/download/version_2.8.1/PrusaSlicer-2.8.1+linux-x64-newer-distros-GTK3-202409181416.AppImage"
-ARG ORCA_APPIMAGE_URL="https://github.com/OrcaSlicer/OrcaSlicer/releases/download/v2.3.1/OrcaSlicer_Linux_AppImage_Ubuntu2404_V2.3.1.AppImage"
 ARG PRUSA_APPIMAGE_SHA256="565f2f4bd4dbb05904a459d54db1916b6932124709c1d17b5aacfe9f5f2f1b03"
-ARG ORCA_APPIMAGE_SHA256="f199e5408914efdbbbfa4fd6752cd6ad4727209b488bc47bff9a0da5f053a701"
 
+# Prusa-only build (OrcaSlicer removed to slim the image for cloud/serverless hosting).
+# To restore Orca: re-add the ORCA_APPIMAGE_URL/SHA args, its wget/extract, and the
+# COPY + symlink in the final stage.
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update \
@@ -63,12 +64,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && echo "$PRUSA_APPIMAGE_SHA256  PrusaSlicer.AppImage" | sha256sum -c - \
     && chmod +x PrusaSlicer.AppImage \
     && ./PrusaSlicer.AppImage --appimage-extract \
-    && mv squashfs-root prusa-squashfs-root \
-    && wget -q "$ORCA_APPIMAGE_URL" -O OrcaSlicer.AppImage \
-    && echo "$ORCA_APPIMAGE_SHA256  OrcaSlicer.AppImage" | sha256sum -c - \
-    && chmod +x OrcaSlicer.AppImage \
-    && ./OrcaSlicer.AppImage --appimage-extract \
-    && mv squashfs-root orca-squashfs-root
+    && mv squashfs-root prusa-squashfs-root
 
 # ==============================================================================
 # Stage 3: Final runtime - Ubuntu 24.04 (Optimized for size & security)
@@ -110,11 +106,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /usr/share/doc/* /usr/share/man/* /tmp/*
 
-# 3. Copy extracted slicers (Owned by root - slicer user only needs execute permissions)
+# 3. Copy extracted slicer (Owned by root - slicer user only needs execute permissions)
 COPY --from=slicer-base /tmp/prusa-squashfs-root /opt/prusaslicer
-COPY --from=slicer-base /tmp/orca-squashfs-root /opt/orcaslicer
-RUN ln -sf /opt/prusaslicer/AppRun /usr/local/bin/prusa-slicer \
-    && ln -sf /opt/orcaslicer/AppRun /usr/local/bin/orca-slicer
+RUN ln -sf /opt/prusaslicer/AppRun /usr/local/bin/prusa-slicer
 
 # 4. Copy dependencies (Owned by root - highly secure, read-only for app)
 COPY --from=builder /opt/venv /opt/venv

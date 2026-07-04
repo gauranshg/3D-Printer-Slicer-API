@@ -30,7 +30,7 @@ function buildSlicerCommandArgs(technology, configFile, outputPath, infillPercen
         return ['--load-settings', settingsFiles, '--arrange', '1', '--orient', '1', '--slice', '0', '--outputdir', outputDir];
     }
 
-    const args = ['--load', configFile, '--center', '100,100'];
+    const args = ['--load', configFile, '--center', '128,128'];
 
     if (technology === 'SLA') {
         args.push('--export-sla', '--output', outputPath);

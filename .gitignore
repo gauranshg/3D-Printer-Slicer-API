@@ -31,6 +31,10 @@ output/*
 input/*
 !input/.gitkeep
 
+# Local build/push logs (transient Docker output)
+build*.log
+push*.log
+
 # Test assets (publish runners, keep heavy sample files private)
 tests/testing-files/**
 !tests/testing-files/.gitkeep

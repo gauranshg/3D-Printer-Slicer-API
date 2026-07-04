@@ -9,7 +9,7 @@ const DEFAULTS = {
     PORT: 3000,
     JSON_BODY_LIMIT: '1mb',
     FORM_BODY_LIMIT: '1mb',
-    MAX_UPLOAD_BYTES: 500 * 1024 * 1024,
+    MAX_UPLOAD_BYTES: 100 * 1024 * 1024,
     MAX_LOG_OUTPUT: 4000,
     SLICE_COMMAND_TIMEOUT_MS: 600000,
     SLICE_TIMEOUT_MINUTES: 10,
@@ -70,7 +70,7 @@ const DEFAULT_PRICING = {
  * @type {{FDM: {x: number, y: number, z: number}, SLA: {x: number, y: number, z: number}}}
  */
 const MAX_BUILD_VOLUMES = {
-    FDM: { x: 250, y: 210, z: 210 },
+    FDM: { x: 256, y: 256, z: 256 },
     SLA: { x: 120, y: 120, z: 150 }
 };
 
