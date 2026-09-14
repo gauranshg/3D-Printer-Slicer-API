@@ -380,6 +380,10 @@ function createPrusaRuntimeProfile(baseConfigPath, technology, layerHeight, infi
 
     if (technology === 'FDM') {
         iniContent = upsertIniKey(iniContent, 'fill_density', infillPercentage);
+        // Solid infill must use a pattern supported at 100% density.
+        if (Number.parseFloat(infillPercentage) === 100) {
+            iniContent = upsertIniKey(iniContent, 'fill_pattern', 'rectilinear');
+        }
     }
 
     const runtimeProfilePath = path.join(HELP_FILES_DIR, `prusa_runtime_${Date.now()}_${Math.floor(Math.random() * 100000)}.ini`);
