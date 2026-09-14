@@ -1,0 +1,6 @@
+# Incident rollout: keep the deployed OS, dependencies and slicer binary unchanged.
+FROM ghcr.io/gauranshg/3d-psa@sha256:8b7c488ddaddd07083954add5d444eb0457438cca036e48e06fca3205dd70659
+# Refuse to patch an unexpected baseline (line endings are immaterial).
+RUN node -e "const fs=require('fs'),c=require('crypto');const s=fs.readFileSync('/app/services/slice/profiles.js','utf8').replace(/\r\n/g,'\n');if(c.createHash('sha256').update(s).digest('hex')!=='a6fc8515b2bbd5825dbd520d2a027d9d1b21ff597cb40e145b79c9c48154e513')throw Error('Unexpected profile baseline')"
+COPY --chown=slicer:slicer app/services/slice/profiles.js /app/services/slice/profiles.js
+RUN node --check /app/services/slice/profiles.js
