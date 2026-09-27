@@ -60,15 +60,6 @@ function parseTimeString(timeStr) {
  * @returns {{print_time_seconds: number, print_time_readable: string}} Parsed print time payload.
  */
 function extractPrintTimeFromGcode(content) {
-    const m73Match = /M73 P0 R(\d+)/i.exec(content);
-    if (m73Match) {
-        const seconds = Number.parseInt(m73Match[1], 10) * 60;
-        return {
-            print_time_seconds: seconds,
-            print_time_readable: `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`
-        };
-    }
-
     const timePatterns = [
         /;\s*estimated printing time(?:\s*\([^)]*\))?\s*=\s*([^\r\n]+)/i,
         /;\s*total estimated time\s*[:=]\s*([^\r\n]+)/i,
@@ -88,6 +79,16 @@ function extractPrintTimeFromGcode(content) {
         return {
             print_time_seconds: parsedSeconds,
             print_time_readable: rawTime
+        };
+    }
+
+    // M73 reports whole minutes. Use it only when no detailed estimate exists.
+    const m73Match = /M73 P0 R(\d+)/i.exec(content);
+    if (m73Match) {
+        const seconds = Number.parseInt(m73Match[1], 10) * 60;
+        return {
+            print_time_seconds: seconds,
+            print_time_readable: `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`
         };
     }
 

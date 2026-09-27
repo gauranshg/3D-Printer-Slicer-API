@@ -37,6 +37,11 @@ function buildSlicerCommandArgs(technology, configFile, outputPath, infillPercen
     } else {
         args.push('--support-material', '--support-material-auto');
         args.push('--gcode-flavor', 'marlin', '--export-gcode', '--output', outputPath, '--fill-density', infillPercentage);
+        // PrusaSlicer validates CLI settings before it loads the runtime INI.
+        // At 100% density, its default grid pattern fails that early check.
+        if (Number.parseFloat(infillPercentage) === 100) {
+            args.push('--fill-pattern', 'rectilinear');
+        }
     }
 
     return args;

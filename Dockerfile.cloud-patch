@@ -1,0 +1,15 @@
+# Keep the deployed PrusaSlicer binary and dependencies while patching the API.
+FROM ghcr.io/gauranshg/3d-psa@sha256:bcf9edd2d31d34e1c5ddc5bb51bfd7cc964c0c40c699fc288bc0544f2256f9c6
+
+# Refuse to patch a different runtime than the one tested on 2026-09-27.
+RUN echo "3ca96bdcccef0cf8771ade103774aa2604f0bb1755e389ec780d1ce4a1291318  /app/services/slice/engine.js" | sha256sum -c - \
+    && echo "2040272140e29bb6944385b0ded334615b50daffeca07e2a14cbcfa5059d8f92  /app/services/slice/errors.js" | sha256sum -c - \
+    && echo "a6d96b49a767e866e32ea80b0594762b1608e8905f7a5c7eb76a63b5c34d02d5  /app/services/slice/model-stats.js" | sha256sum -c -
+
+COPY --chown=slicer:slicer app/services/slice/engine.js /app/services/slice/engine.js
+COPY --chown=slicer:slicer app/services/slice/errors.js /app/services/slice/errors.js
+COPY --chown=slicer:slicer app/services/slice/model-stats.js /app/services/slice/model-stats.js
+
+RUN node --check /app/services/slice/engine.js \
+    && node --check /app/services/slice/errors.js \
+    && node --check /app/services/slice/model-stats.js

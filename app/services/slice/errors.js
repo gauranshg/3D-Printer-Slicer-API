@@ -89,6 +89,11 @@ function isOrcaPresetCompatibilityError(err) {
     return combined.includes('process not compatible with printer');
 }
 
+function isInvalidSolidInfillPatternError(err) {
+    const combined = `${err?.message || ''}\n${err?.stderr || ''}`.toLowerCase();
+    return combined.includes('selected fill pattern is not supposed to work at 100% density');
+}
+
 /**
  * Convert processing exceptions into stable API error responses.
  * @param {Error & {stderr?: string, killed?: boolean}} err Processing error.
@@ -139,6 +144,14 @@ function handleProcessingError(err, res, filesCleanupList, inputFile, getSupport
             success: false,
             error: 'Orca profile preset combination is incompatible. Please check machine/process profile pairing.',
             errorCode: 'ORCA_PROFILE_INCOMPATIBLE'
+        });
+    }
+
+    if (isInvalidSolidInfillPatternError(err)) {
+        return res.status(422).json({
+            success: false,
+            error: 'The selected fill pattern cannot be used at 100% infill.',
+            errorCode: 'INVALID_INFILL_PATTERN'
         });
     }
 
