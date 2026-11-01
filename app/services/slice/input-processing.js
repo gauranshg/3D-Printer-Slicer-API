@@ -61,7 +61,25 @@ async function tryOptimizeOrientation(processableFile, technology, filesCleanupL
     return processableFile;
 }
 
+/**
+ * Decide whether a failed slice deserves one more try on the unrotated model.
+ * Re-exported (rotated) STLs have crashed PrusaSlicer where the upload sliced
+ * fine (2026-10-19, std::bad_alloc), so a failure on an oriented file is not
+ * proof the model is bad. Timeouts are not retried: a second run would double
+ * an already maximal wait.
+ * @param {Error & {killed?: boolean}} err Slicer failure.
+ * @param {string} slicedFile File the failed slice ran on.
+ * @param {string} unorientedFile Model before orientation optimization.
+ * @returns {boolean} True when slicing unorientedFile is worth trying.
+ */
+function shouldRetryWithoutOrientation(err, slicedFile, unorientedFile) {
+    if (!unorientedFile || slicedFile === unorientedFile) return false;
+    if (err?.killed) return false;
+    return true;
+}
+
 module.exports = {
     convertInputToStl,
-    tryOptimizeOrientation
+    tryOptimizeOrientation,
+    shouldRetryWithoutOrientation
 };

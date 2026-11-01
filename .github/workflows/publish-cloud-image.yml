@@ -7,6 +7,9 @@ on:
       - 'app/services/slice/engine.js'
       - 'app/services/slice/errors.js'
       - 'app/services/slice/model-stats.js'
+      - 'app/services/slice/input-processing.js'
+      - 'app/services/slice.service.js'
+      - 'app/orient.py'
       - 'Dockerfile.cloud-patch'
       - '.github/workflows/publish-cloud-image.yml'
 

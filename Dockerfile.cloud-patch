@@ -1,15 +1,26 @@
 # Keep the deployed PrusaSlicer binary and dependencies while patching the API.
-FROM ghcr.io/gauranshg/3d-psa@sha256:bcf9edd2d31d34e1c5ddc5bb51bfd7cc964c0c40c699fc288bc0544f2256f9c6
+# Base = the image live on 2026-11-01, which already carries the 2026-09-27
+# patch of engine.js, errors.js and model-stats.js.
+FROM ghcr.io/gauranshg/3d-psa@sha256:c707aa9595e620fb45836e85ea732f768121d8dada0927af6c02d3ac26760516
 
-# Refuse to patch a different runtime than the one tested on 2026-09-27.
-RUN echo "3ca96bdcccef0cf8771ade103774aa2604f0bb1755e389ec780d1ce4a1291318  /app/services/slice/engine.js" | sha256sum -c - \
-    && echo "2040272140e29bb6944385b0ded334615b50daffeca07e2a14cbcfa5059d8f92  /app/services/slice/errors.js" | sha256sum -c - \
-    && echo "a6d96b49a767e866e32ea80b0594762b1608e8905f7a5c7eb76a63b5c34d02d5  /app/services/slice/model-stats.js" | sha256sum -c -
+# Refuse to patch a different runtime than the one tested on 2026-11-01.
+RUN echo "4ad8276097bca4a1b236e9a8ed93ed43e63abcc81413796a8b882343328cc75a  /app/services/slice/engine.js" | sha256sum -c - \
+    && echo "0e13fccd5d4b9ca96f5fd241f5aecd7bd40040acfa787f9d35ab1d4254a05fb8  /app/services/slice/errors.js" | sha256sum -c - \
+    && echo "de561541d2d65131edfdc4ea5cb21953403fb97d40dfc626ff038c263d9e4060  /app/services/slice/model-stats.js" | sha256sum -c - \
+    && echo "1374bdce95dddedaa32903636514a2acd0a96a417e73e94c3c41e93bf6bc334d  /app/services/slice/input-processing.js" | sha256sum -c - \
+    && echo "624020dc1759ee21eabef61c6df5a3ef104fd8461c89166045f12a9775462b85  /app/services/slice.service.js" | sha256sum -c - \
+    && echo "6ee9e4c42ed1a16101e52413dc92989d8c02b223f186022eaaf956ac6d5233c9  /app/orient.py" | sha256sum -c -
 
 COPY --chown=slicer:slicer app/services/slice/engine.js /app/services/slice/engine.js
 COPY --chown=slicer:slicer app/services/slice/errors.js /app/services/slice/errors.js
 COPY --chown=slicer:slicer app/services/slice/model-stats.js /app/services/slice/model-stats.js
+COPY --chown=slicer:slicer app/services/slice/input-processing.js /app/services/slice/input-processing.js
+COPY --chown=slicer:slicer app/services/slice.service.js /app/services/slice.service.js
+COPY --chown=slicer:slicer app/orient.py /app/orient.py
 
 RUN node --check /app/services/slice/engine.js \
     && node --check /app/services/slice/errors.js \
-    && node --check /app/services/slice/model-stats.js
+    && node --check /app/services/slice/model-stats.js \
+    && node --check /app/services/slice/input-processing.js \
+    && node --check /app/services/slice.service.js \
+    && python3 -c "import ast; ast.parse(open('/app/orient.py').read())"

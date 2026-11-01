@@ -10,7 +10,7 @@ const { enqueueSliceJob, toQueueErrorResponse } = require('./slice/queue');
 const { runCommand } = require('./slice/command');
 const { extractFirstSupportedFromZip } = require('./slice/zip');
 const { parseSliceOptions } = require('./slice/options');
-const { convertInputToStl, tryOptimizeOrientation } = require('./slice/input-processing');
+const { convertInputToStl, tryOptimizeOrientation, shouldRetryWithoutOrientation } = require('./slice/input-processing');
 const { getModelInfo, parseOutputDetailed } = require('./slice/model-stats');
 const { resolveSlicerExecutable, buildSlicerCommandArgs } = require('./slice/engine');
 const { applyTransformAndValidateModel } = require('./slice/transform');
@@ -95,7 +95,7 @@ function appendOriginalExtensionToUpload(inputFile, originalExt, filesCleanupLis
  * @param {string} inputFile Input file path with original extension.
  * @param {'FDM'|'SLA'} technology Requested technology.
  * @param {string[]} filesCleanupList Cleanup collector.
- * @returns {Promise<{processableFile: string, originalModelInfo: {x: number, y: number, z: number, height_mm: number}}>} Preprocessing result.
+ * @returns {Promise<{processableFile: string, unorientedFile: string, originalModelInfo: {x: number, y: number, z: number, height_mm: number}}>} Preprocessing result.
  */
 async function prepareProcessableModel(inputFile, technology, filesCleanupList) {
     let processableFile = inputFile;
@@ -104,11 +104,13 @@ async function prepareProcessableModel(inputFile, technology, filesCleanupList) 
     }
 
     processableFile = await convertInputToStl(processableFile, filesCleanupList);
+    const unorientedFile = processableFile;
     processableFile = await tryOptimizeOrientation(processableFile, technology, filesCleanupList);
 
     const originalModelInfo = await getModelInfo(processableFile);
     return {
         processableFile,
+        unorientedFile,
         originalModelInfo
     };
 }
@@ -370,7 +372,7 @@ async function processSlice(req, res, options = {}) {
     try {
         inputFile = appendOriginalExtensionToUpload(inputFile, originalExt, filesCleanupList);
 
-        let { processableFile, originalModelInfo } = await prepareProcessableModel(
+        let { processableFile, unorientedFile, originalModelInfo } = await prepareProcessableModel(
             inputFile,
             technology,
             filesCleanupList
@@ -396,35 +398,54 @@ async function processSlice(req, res, options = {}) {
         const { baseConfigFile, orcaMachineConfigFile } = profileResolution;
 
         const buildVolumeLimits = resolveBuildVolumeLimits(engine, technology, baseConfigFile, orcaMachineConfigFile);
-        const modelPreparation = await prepareModelForSlicingOrResponse(
-            res,
-            filesCleanupList,
-            processableFile,
-            originalModelInfo,
-            transformOptions,
-            buildVolumeLimits
-        );
-        if (modelPreparation.response) {
-            return modelPreparation.response;
+
+        const prepareAndSlice = async (candidateFile, candidateModelInfo) => {
+            const modelPreparation = await prepareModelForSlicingOrResponse(
+                res,
+                filesCleanupList,
+                candidateFile,
+                candidateModelInfo,
+                transformOptions,
+                buildVolumeLimits
+            );
+            if (modelPreparation.response) {
+                return modelPreparation;
+            }
+
+            const { stats } = await runSlicerAndParseStats({
+                engine,
+                technology,
+                layerHeight,
+                infillPercentage,
+                baseConfigFile,
+                orcaMachineConfigFile,
+                slicerOutputPath,
+                outputPath,
+                orcaOutputDir,
+                processableFile: modelPreparation.processableFile,
+                filesCleanupList,
+                effectiveModelInfo: modelPreparation.effectiveModelInfo
+            });
+            return { ...modelPreparation, stats };
+        };
+
+        let sliced;
+        try {
+            sliced = await prepareAndSlice(processableFile, originalModelInfo);
+        } catch (err) {
+            if (!shouldRetryWithoutOrientation(err, processableFile, unorientedFile)) {
+                throw err;
+            }
+            console.warn(`[WARN] Slicing the oriented model failed (${err.message}); retrying with the uploaded orientation.`);
+            processableFile = unorientedFile;
+            originalModelInfo = await getModelInfo(unorientedFile);
+            sliced = await prepareAndSlice(processableFile, originalModelInfo);
+        }
+        if (sliced.response) {
+            return sliced.response;
         }
 
-        processableFile = modelPreparation.processableFile;
-        const { transformPlan, effectiveModelInfo, modelBoundsValidation } = modelPreparation;
-
-        const { stats } = await runSlicerAndParseStats({
-            engine,
-            technology,
-            layerHeight,
-            infillPercentage,
-            baseConfigFile,
-            orcaMachineConfigFile,
-            slicerOutputPath,
-            outputPath,
-            orcaOutputDir,
-            processableFile,
-            filesCleanupList,
-            effectiveModelInfo
-        });
+        const { transformPlan, modelBoundsValidation, stats } = sliced;
 
         const responsePayload = buildSliceSuccessResponse({
             engine,
