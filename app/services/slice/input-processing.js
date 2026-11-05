@@ -38,13 +38,32 @@ async function convertInputToStl(processableFile, filesCleanupList) {
 }
 
 /**
+ * Whether uploads of this technology are re-oriented before slicing.
+ *
+ * FDM quotes keep the uploaded pose (2026-11-05). The "stable pose" search
+ * laid upright models on their side (an 18 cm bust sliced at 10 cm tall),
+ * adding supports and ~20% print time versus how the owner prints the same
+ * file in Bambu Studio, which keeps the imported orientation.
+ * @param {'FDM'|'SLA'} technology Active technology mode.
+ * @returns {boolean} True when orientation optimization should run.
+ */
+function shouldOptimizeOrientation(technology) {
+    return technology !== 'FDM';
+}
+
+/**
  * Attempt orientation optimization and fall back to original file on failure.
+ * FDM uploads are returned untouched (see shouldOptimizeOrientation).
  * @param {string} processableFile STL input path.
  * @param {'FDM'|'SLA'} technology Active technology mode.
  * @param {string[]} filesCleanupList Temporary file collector.
  * @returns {Promise<string>} Optimized or original STL path.
  */
 async function tryOptimizeOrientation(processableFile, technology, filesCleanupList) {
+    if (!shouldOptimizeOrientation(technology)) {
+        console.log(`[INFO] Keeping uploaded orientation for ${technology}.`);
+        return processableFile;
+    }
     console.log(`[INFO] Optimizing orientation for ${technology}...`);
     const orientedStlPath = processableFile.replace('.stl', '_oriented.stl');
 
@@ -80,6 +99,7 @@ function shouldRetryWithoutOrientation(err, slicedFile, unorientedFile) {
 
 module.exports = {
     convertInputToStl,
+    shouldOptimizeOrientation,
     tryOptimizeOrientation,
     shouldRetryWithoutOrientation
 };

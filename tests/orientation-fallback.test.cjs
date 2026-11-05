@@ -1,7 +1,19 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { shouldRetryWithoutOrientation } = require('../app/services/slice/input-processing');
+const {
+    shouldOptimizeOrientation,
+    shouldRetryWithoutOrientation,
+    tryOptimizeOrientation
+} = require('../app/services/slice/input-processing');
+
+test('FDM uploads keep their orientation; SLA is still optimized', async () => {
+    assert.equal(shouldOptimizeOrientation('FDM'), false);
+    assert.equal(shouldOptimizeOrientation('SLA'), true);
+    const cleanup = [];
+    assert.equal(await tryOptimizeOrientation('upload.stl', 'FDM', cleanup), 'upload.stl');
+    assert.deepEqual(cleanup, []);
+});
 
 test('a failed slice of an oriented file is retried on the upload', () => {
     // 2026-10-19: PrusaSlicer crashed (std::bad_alloc) on the re-exported

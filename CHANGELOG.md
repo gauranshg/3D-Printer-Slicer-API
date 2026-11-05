@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## cloud-deploy-a1 (2026-11-05, print-time calibration)
+
+### Changed
+
+- `configs/prusa/FDM_0.1mm.ini`, `FDM_0.2mm.ini` and `FDM_0.3mm.ini` now mirror Bambu Studio's A1 presets (0.08mm High Quality, 0.20mm Standard, 0.28mm Extra Draft) plus Bambu PLA Basic: all feature speeds, accelerations, the 21 mm³/s flow cap, the 6 s minimum layer time, and A1 machine limits.
+  - Reason: the profiles set only a few speeds, so PrusaSlicer filled the rest with slow defaults (supports at 60 mm/s, gap fill at 20). The 0.1 and 0.3 mm files used generic 20–90 mm/s speeds, not A1 ones. Against the owner's Bambu Studio times, mean error went from 9% / +67% / +232% (0.2 / 0.3 / 0.1 mm) to 3% / 13% / ~15%.
+  - The production profiles live on the Azure Files share `configs`, so they must be uploaded there as well as committed.
+- FDM uploads keep their uploaded orientation (`app/services/slice/input-processing.js`). SLA is still optimized.
+  - Reason: the stable-pose search laid upright models on their side (the 18 cm Horse Bust sliced 10 cm tall), adding supports and ~20% print time versus Bambu Studio, which keeps the imported pose.
+- Printer start-up time (~15 min) is billed by the website backend (`PRICE_SETUP_MINUTES`), because PrusaSlicer 2.8.1's estimate ignores start-G-code dwells.
+
 ## cloud-deploy-a1 (2026-11-05)
 
 ### Fixed
