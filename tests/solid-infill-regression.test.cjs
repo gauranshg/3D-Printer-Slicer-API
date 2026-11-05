@@ -19,6 +19,22 @@ test('Prusa solid infill gets a compatible CLI pattern before config loading', (
     }
 });
 
+test('Prusa FDM uses organic supports and a 15 mm² solid-infill threshold', () => {
+    const valueAfter = (args, flag) => args[args.indexOf(flag) + 1];
+    for (const infill of ['20%', '100%']) {
+        const args = buildSlicerCommandArgs('FDM', 'profile.ini', 'part.gcode', infill);
+        assert.ok(args.includes('--support-material-auto'));
+        assert.equal(valueAfter(args, '--support-material-style'), 'organic');
+        assert.equal(valueAfter(args, '--solid-infill-below-area'), '15');
+    }
+    const sla = buildSlicerCommandArgs('SLA', 'profile.ini', 'part.sl1', '20%');
+    const orca = buildSlicerCommandArgs('FDM', 'profile.json', 'out/part.gcode', '20%', 'orca', 'machine.json');
+    for (const args of [sla, orca]) {
+        assert.equal(args.includes('--support-material-style'), false);
+        assert.equal(args.includes('--solid-infill-below-area'), false);
+    }
+});
+
 test('solid pattern failures have a stable non-retryable response', () => {
     let status;
     let body;

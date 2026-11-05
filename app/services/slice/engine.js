@@ -35,7 +35,15 @@ function buildSlicerCommandArgs(technology, configFile, outputPath, infillPercen
     if (technology === 'SLA') {
         args.push('--export-sla', '--output', outputPath);
     } else {
-        args.push('--support-material', '--support-material-auto');
+        // Auto supports stay on so overhanging models remain printable, but in
+        // PrusaSlicer's light "organic" (tree) style rather than its default
+        // grid, which billed 31-63% extra plastic on small/organic parts.
+        // Solid infill only below 15 mm² (Bambu Studio's threshold) instead of
+        // PrusaSlicer's 70 mm² default, which printed thin features solid.
+        // Together these match Bambu A1 slices within ~0.3 g on test models.
+        args.push('--support-material', '--support-material-auto',
+            '--support-material-style', 'organic',
+            '--solid-infill-below-area', '15');
         args.push('--gcode-flavor', 'marlin', '--export-gcode', '--output', outputPath, '--fill-density', infillPercentage);
         // PrusaSlicer validates CLI settings before it loads the runtime INI.
         // At 100% density, its default grid pattern fails that early check.

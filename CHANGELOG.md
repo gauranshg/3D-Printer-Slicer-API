@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## cloud-deploy-a1 (2026-11-05)
+
+### Fixed
+
+- Prusa FDM slices now use `--support-material-style organic` and `--solid-infill-below-area 15` (`app/services/slice/engine.js`).
+  - Reason: auto supports were forced on in PrusaSlicer's default grid style, and its 70 mm² solid-infill threshold printed thin features solid. On organic and small models, 31–63% of the billed filament was support material, so quotes ran 2–4× competitors. At 0.2 mm/20%, against the previous image: ball fidget 25.2 → 11.2 g, Echo Dot mount 19.6 → 13.2 g, Horse Flow 175.6 → 117.1 g, Horse Bust 282.6 → 248.2 g. Support-free models are unchanged (star fidget 85.3 → 84.1 g, 20 mm cube 4.1 g). These now sit within a few grams of Bambu Studio A1 slices.
+  - Auto supports stay enabled, so overhanging models remain printable.
+
 ## v3.1.4 (2026-05-14)
 
 ### Added
