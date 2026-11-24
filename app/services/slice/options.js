@@ -119,7 +119,7 @@ function validateLayerHeightSelection(layerHeight, forcedTechnology, engine) {
     if (engine === 'prusa' && !forcedTechnology && !validateLayerHeightForPrusa(layerHeight)) {
         return {
             success: false,
-            error: 'Invalid layerHeight for PrusaSlicer. Allowed values: 0.025, 0.05, 0.1, 0.2, 0.3',
+            error: `Invalid layerHeight for PrusaSlicer. Allowed values: ${LAYER_HEIGHTS.PRUSA.join(', ')}`,
             errorCode: 'INVALID_LAYER_HEIGHT_FOR_ENGINE'
         };
     }
@@ -127,13 +127,13 @@ function validateLayerHeightSelection(layerHeight, forcedTechnology, engine) {
     if (engine === 'orca' && !validateLayerHeightForOrca(layerHeight)) {
         return {
             success: false,
-            error: 'Invalid layerHeight for OrcaSlicer. Allowed values: 0.1, 0.2, 0.3',
+            error: `Invalid layerHeight for OrcaSlicer. Allowed values: ${LAYER_HEIGHTS.ORCA.join(', ')}`,
             errorCode: 'INVALID_LAYER_HEIGHT_FOR_ENGINE'
         };
     }
 
     if (engine !== 'orca' && forcedTechnology && !validateLayerHeightForTechnology(forcedTechnology, layerHeight)) {
-        const allowedMessage = forcedTechnology === 'SLA' ? '0.025, 0.05' : '0.1, 0.2, 0.3';
+        const allowedMessage = (forcedTechnology === 'SLA' ? LAYER_HEIGHTS.BY_TECHNOLOGY.SLA : LAYER_HEIGHTS.BY_TECHNOLOGY.FDM).join(', ');
         return {
             success: false,
             error: `Invalid layerHeight for ${forcedTechnology}. Allowed values: ${allowedMessage}`,

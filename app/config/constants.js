@@ -38,11 +38,13 @@ const DEFAULTS = {
  * Layer-height presets by engine/technology.
  */
 const LAYER_HEIGHTS = {
-    PRUSA: [0.025, 0.05, 0.1, 0.2, 0.3],
+    // 0.06 / 0.08 / 0.14 are the Bambu A1 0.2 mm nozzle presets; callers pick
+    // the matching configs/prusa/FDM_N02_<material>_<layer>mm.ini via prusaProfile.
+    PRUSA: [0.025, 0.05, 0.06, 0.08, 0.1, 0.14, 0.2, 0.3],
     ORCA: [0.1, 0.2, 0.3],
     BY_TECHNOLOGY: {
         SLA: [0.025, 0.05],
-        FDM: [0.1, 0.2, 0.3]
+        FDM: [0.06, 0.08, 0.1, 0.14, 0.2, 0.3]
     }
 };
 

@@ -64,7 +64,7 @@ per-material hourly rate (see Pricing below).
 | Field | Required | Notes |
 |---|---|---|
 | `choosenFile` | ✅ | The model file. Max **100 MB**. |
-| `layerHeight` | – | `0.1`, `0.2`, `0.3` (FDM) or `0.025`, `0.05` (SLA resin). Default `0.2`. |
+| `layerHeight` | – | `0.1`, `0.2`, `0.3` (FDM, 0.4 nozzle), `0.06`, `0.08`, `0.1`, `0.14` (FDM, 0.2 nozzle - send the matching `printerProfile`) or `0.025`, `0.05` (SLA resin). Default `0.2`. |
 | `material` | – | e.g. `PLA`, `ABS`, `PETG`, `TPU`. Default `PLA`. |
 | `infill` | – | `0`–`100` (percent). Default `20`. |
 | `sizeUnit` | – | `mm` (default) or `inch`. |
@@ -73,6 +73,12 @@ per-material hourly rate (see Pricing below).
 | `scalePercent` | – | Uniform scale; can't combine with `targetSize*`. |
 | `rotationX/Y/Z` | – | Rotation in degrees. |
 | `printerProfile` | – | Override profile file from `configs/prusa` (e.g. `FDM_0.2mm.ini`). |
+
+**0.2 mm nozzle (ultra-fine):** profiles `configs/prusa/FDM_N02_<PLA|PETG>_<0.06|0.08|0.10|0.14>mm.ini`,
+mirroring Bambu Studio's `@BBL A1 0.2 nozzle` presets (0.22 mm lines, 4 walls,
+volumetric cap PLA 2 / PETG 1 mm3/s). The website sends
+`printerProfile=FDM_N02_PLA_0.06mm.ini` + `layerHeight=0.06` (rules in the website repo's
+`backend-python/utils/print_profiles.py`). Upload new profiles to the `configs` share (see below).
 
 Supported input formats: `.stl`, `.obj`, `.3mf` (direct); `.stp`, `.step`,
 `.igs`, `.iges`, `.ply` (CAD/NURBS, auto-converted); `.zip` (must contain exactly

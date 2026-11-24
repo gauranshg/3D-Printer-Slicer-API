@@ -10,6 +10,9 @@ on:
       - 'app/services/slice/input-processing.js'
       - 'app/services/slice.service.js'
       - 'app/orient.py'
+      - 'app/config/constants.js'
+      - 'app/services/slice/options.js'
+      - 'configs/prusa/**'
       - 'Dockerfile.cloud-patch'
       - '.github/workflows/publish-cloud-image.yml'
 
